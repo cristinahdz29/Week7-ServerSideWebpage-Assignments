@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+
+    <body>
+
+        <div id="content">
+
+        {{! form to get information from user that will be posted}}
+            
+                <form id="input" method="POST" action="/create-trip">
+                    <input type="text" placeholder = "title" name="title" /> <br>
+                    <input type="text" placeholder = "image Url" name="imageUrl" /> <br>
+                    <input type="text" placeholder = "Date of Departure" name="dateDeparture"/> <br>
+                    <input type="text" placeholder = "Date of Return" name="dateReturn"/> <br>
+
+                    
+                    <button id= "addButton">Add</button>
+                    
+                </form>
+            
+
+        {{!Create elements where we want our data displayed on the browser}}
+            
+                {{#allTrips}}
+                
+                    <form id="display" method="POST" action="/delete-trip">
+                        <div id="imageDiv">
+                            <img src={{imageUrl}}>     
+                        </div> 
+
+                        <div id="infoDiv">
+                            <div>Destination: {{title}} </div>
+                            <div>Dates: {{dateDeparture}} - {{dateReturn}}</div>
+                        </div>
+                        <button>Delete</button>
+                        <input type="hidden" value= {{tripId}} name="tripId"/>
+                    </form>
+                
+                {{/allTrips}}
+            
+        </div>
+    </body>
+</html>

@@ -1,0 +1,44 @@
+{{! this is the html page for your movies, will work on this later }}
+<html>
+    <head></head>
+
+    <body>
+        <h1>Movies</h1>
+
+        <form method="POST" action="/movies/create">
+            <input type="text" placeholder="title" name="title" />
+            <input type="text" placeholder="description" name="description" />
+            <input type="text" placeholder="genre" name="genre" />
+            <input type="text" placeholder="posterUrl" name="posterUrl" />
+            <button>Save</button>
+        </form>
+
+        <form method="POST" action="/movies/genre/">
+            <input type="text" placeholder="genre" name="genre" />
+            <button>Filter</button>
+        </form>
+
+        <ul>
+        {{#movies}}
+        <form method="POST" action="/movies/delete">
+        <li>
+        <input type="hidden" value={{movieId}} name="movieId" />
+          <label>{{title}}</label>
+          <label><img src={{posterUrl}}></label>
+          <p><button>Delete</button></p>
+        </li>
+        </form>
+        <p></p>
+        <form method="POST" action="/movies/{{movieId}}">
+            <button>More Info</button>
+            {{#moreInfo}}
+                <p>{{posterUrl}}</p>
+                <p>{{title}}</p>
+                <p>{{description}}</p>
+                <p>{{genre}}</p>
+            {{/moreInfo}}
+        </form>
+        {{/movies}}
+    </ul>
+    </body>
+</html>

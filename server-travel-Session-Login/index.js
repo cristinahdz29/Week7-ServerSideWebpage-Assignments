@@ -1,14 +1,23 @@
 const express = require("express");
 const index = express();
 const session = require("express-session");
+const bcrypt = require("bcryptjs");
 // const tripsRouter = require("./routes/trips");
 //uuid
 const { v4: uuidv4 } = require("uuid");
+
+// path is already part of the NodeJS framework
+// you don't have to install it
+const path = require("path");
+
+const VIEWS_PATH = path.join(__dirname, "/views");
+console.log(VIEWS_PATH);
 
 //middleware
 index.use(express.urlencoded());
 // index.use("/trips", tripsRouter);
 const mustacheExpress = require("mustache-express");
+const { nextTick } = require("process");
 
 index.use(
   session({
@@ -19,9 +28,12 @@ index.use(
 );
 
 // setting up Express to use Mustache Express as template pages
-index.engine("mustache", mustacheExpress());
+index.engine(
+  "mustache",
+  mustacheExpress(VIEWS_PATH + "/partials", ".mustache")
+);
 // the pages are located in views directory
-index.set("views", "./views");
+index.set("views", VIEWS_PATH);
 // extension will be .mustache
 index.set("view engine", "mustache");
 
@@ -44,13 +56,6 @@ index.post("/register", (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  //creating object of user data
-  let user = {
-    userId: uuidv4(),
-    username: username,
-    password: password,
-  };
-
   const existingUser = users.find((user) => {
     return user.username == username && user.password == password;
   });
@@ -62,8 +67,21 @@ index.post("/register", (req, res) => {
       res.render("register", { message: "Account already exists" });
     }
   } else {
-    users.push(user);
-    res.redirect("/login");
+    bcrypt.genSalt(10, function (err, salt) {
+      bcrypt.hash(password, salt, function (err, hash) {
+        if (err) {
+          res.redirect("/register", { message: "Error has occurred!" });
+        } else {
+          let user = {
+            username: username,
+            password: hash,
+          };
+          console.log(user);
+          users.push(user);
+          res.redirect("/login");
+        }
+      });
+    });
   }
 });
 
@@ -80,22 +98,38 @@ index.post("/login", (req, res) => {
   // check if the username and password matches of a user in the users array
   // using 'find' array helper to look through list of users and see if others match
   const persistedUser = users.find((user) => {
-    return user.username == username && user.password == password;
+    return user.username == username;
   });
-  if (persistedUser) {
-    // put something in the session to indicate that the user is
-    // logged in
-    if (req.session) {
-      // don't put sensitive data into the session
-      //   req.session.isAuthenticated = true;
-      req.session.userId = persistedUser.userId;
-      //req.session.foo = username
-      res.redirect("/profile");
-    }
-  } else {
-    // tell the user that username or password is incorrect
+
+  if (!persistedUser) {
     res.render("login", { message: "Username or password is incorrect" });
+    return;
   }
+
+  bcrypt.compare(password, persistedUser.password, function (err, result) {
+    console.log(result);
+
+    if (result) {
+      //password matches
+      res.redirect("/profile");
+    } else {
+      res.render("login", { message: "Password is incorrect" });
+    }
+  });
+  //   if (persistedUser) {
+  //     // put something in the session to indicate that the user is
+  //     // logged in
+  //     if (req.session) {
+  //       // don't put sensitive data into the session
+  //       //   req.session.isAuthenticated = true;
+  //       req.session.userId = persistedUser.userId;
+  //       //req.session.foo = username
+  //       res.redirect("/profile");
+  //     }
+  //   } else {
+  //     // tell the user that username or password is incorrect
+  //     res.render("login", { message: "Username or password is incorrect" });
+  //   }
 });
 
 //profile page route, will be /profile
